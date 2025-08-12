@@ -6,12 +6,13 @@ import shlex
 import textwrap
 import time
 import traceback
+import urllib.parse
+import urllib.request
 import zipfile
 
 import boto3
 import botocore.exceptions
 import click
-import requests
 
 
 # Functions for naming our AWS resources
@@ -329,13 +330,19 @@ def watch(queue_name, forward_url):
             try:
                 print('Processing message', message.get('MessageId', '???'))
                 body = json.loads(message['Body'])
-                requests.request(
-                    body.get('httpMethod', 'GET'),
-                    forward_url,
+                # Build URL with query parameters
+                url = forward_url
+                params = body.get('queryStringParameters', {})
+                if params:
+                    url += '?' + urllib.parse.urlencode(params)
+                
+                # Create and send request
+                urllib.request.urlopen(urllib.request.Request(
+                    url,
+                    data=(body['body'].encode() if body.get('body') else None),
                     headers=body.get('headers', {}),
-                    params=body.get('queryStringParameters', {}),
-                    data=body.get('body', '')
-                )
+                    method=body.get('httpMethod', 'GET')
+                ))
             except:
                 print('Encountered an error:')
                 traceback.print_exc()
