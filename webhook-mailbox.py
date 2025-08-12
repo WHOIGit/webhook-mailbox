@@ -11,7 +11,8 @@ import zipfile
 import boto3
 import botocore.exceptions
 import click
-import http_client as requests
+import urllib.request
+import urllib.parse
 
 
 # Functions for naming our AWS resources
@@ -329,13 +330,24 @@ def watch(queue_name, forward_url):
             try:
                 print('Processing message', message.get('MessageId', '???'))
                 body = json.loads(message['Body'])
-                requests.request(
-                    body.get('httpMethod', 'GET'),
-                    forward_url,
+                # Build URL with query parameters
+                url = forward_url
+                params = body.get('queryStringParameters', {})
+                if params:
+                    url += '?' + urllib.parse.urlencode(params)
+                
+                # Prepare request data
+                data = body.get('body', '')
+                request_data = data.encode('utf-8') if data else None
+                
+                # Create and send request
+                req = urllib.request.Request(
+                    url,
+                    data=request_data,
                     headers=body.get('headers', {}),
-                    params=body.get('queryStringParameters', {}),
-                    data=body.get('body', '')
+                    method=body.get('httpMethod', 'GET')
                 )
+                urllib.request.urlopen(req)
             except:
                 print('Encountered an error:')
                 traceback.print_exc()
