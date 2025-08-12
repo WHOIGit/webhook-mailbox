@@ -11,7 +11,7 @@ import zipfile
 import boto3
 import botocore.exceptions
 import click
-import requests
+import http_client as requests
 
 
 # Functions for naming our AWS resources
