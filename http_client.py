@@ -81,9 +81,13 @@ def request(method, url, params=None, data=None, json=None, headers=None, timeou
     elif isinstance(data, (bytes, bytearray)):
         body = data
     elif data is not None:
-        # Treat as form data
-        body = _parse.urlencode(data, doseq=True).encode("utf-8")
-        hdrs.setdefault("Content-Type", "application/x-www-form-urlencoded")
+        if isinstance(data, str):
+            # String data passed as-is
+            body = data.encode("utf-8")
+        else:
+            # Treat as form data (dict, list of tuples, etc.)
+            body = _parse.urlencode(data, doseq=True).encode("utf-8")
+            hdrs.setdefault("Content-Type", "application/x-www-form-urlencoded")
 
     req = _request.Request(url=url, data=body, method=method.upper(), headers=hdrs)
 
