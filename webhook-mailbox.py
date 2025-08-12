@@ -339,7 +339,7 @@ def watch(queue_name, forward_url):
                 # Create and send request
                 urllib.request.urlopen(urllib.request.Request(
                     url,
-                    data=(body.get('body', '').encode('utf-8') if body.get('body') else None),
+                    data=(body['body'].encode() if body.get('body') else None),
                     headers=body.get('headers', {}),
                     method=body.get('httpMethod', 'GET')
                 ))
